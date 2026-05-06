@@ -1,68 +1,40 @@
 # nexus-move-tablebase-scope
 
-`nexus-move-tablebase-scope` treats chess and game engines as a local verification problem. The Elixir implementation is intentionally narrow, but the fixtures and notes make the behavior explicit.
+`nexus-move-tablebase-scope` explores chess and game engines with a small Elixir codebase and local fixtures. The technical goal is to build an Elixir toolkit that studies tablebase behavior through seeded input scenarios, with deterministic summary checks and local-only command execution.
 
-## Nexus Move Tablebase Scope Checkpoints
+## Problem It Tries To Make Smaller
 
-Treat the compact fixture as the contract and the extended examples as a scratchpad. The code should stay boring enough that a change in behavior is obvious from the test output.
+The project exists to keep a narrow engineering decision visible and testable. For this repo, that decision is how position pressure and search width should influence a review result.
 
-## What This Is For
+## Nexus Move Tablebase Scope Review Notes
 
-This project keeps the domain idea close to the tests. That makes it useful as a reference implementation, a small experiment, or a starting point for a more specialized tool.
+Start with `position pressure` and `search width`. Those cases create the widest score spread in this repo, so they are the best quick check when the model changes.
 
-## Project Layout
+## Working Pieces
 
-- `lib`: library code
-- `test`: language test directory
-- `fixtures`: compact golden scenarios
-- `examples`: expanded scenario set
-- `metadata`: project constants and verification metadata
-- `docs`: operations and extension notes
-- `scripts`: local verification and audit commands
+- `fixtures/domain_review.csv` adds cases for position pressure and move ordering.
+- `metadata/domain-review.json` records the same cases in structured form.
+- `config/review-profile.json` captures the read order and the two review questions.
+- `examples/nexus-move-tablebase-walkthrough.md` walks through the case spread.
+- The Elixir code includes a review path for `position pressure` and `search width`.
+- `docs/field-notes.md` explains the strongest and weakest cases.
 
-## Useful Pieces
+## Design Notes
 
-- Includes extended examples for turn flow, including `recovery` and `degraded`.
-- Documents search limits tradeoffs in `docs/operations.md`.
-- Runs locally with a single verification command and no external credentials.
-- Stores project constants and verification metadata in `metadata/project.json`.
-- Adds a repository audit script that checks structure before running the language verifier.
+The core code exposes a scoring path and the added review layer uses `signal`, `slack`, `drag`, and `confidence`. The domain terms are `position pressure`, `move ordering`, `search width`, and `endgame risk`.
 
-## Architecture Notes
+The Elixir implementation avoids hidden state so fixture changes are easy to reason about.
 
-The core is a scoring model over demand, capacity, latency, risk, and weight. That keeps position state, move ranking, and turn flow in one explicit decision path. The threshold is 171, with risk penalty 5, latency penalty 3, and weight bonus 2. The Elixir project uses Mix and ExUnit with clear data maps for each scenario.
-
-## Tooling
-
-Clone the repository, enter the directory, and run the verifier. No database server, cloud account, or token is required.
-
-## Case Study
-
-The extended cases are not random smoke tests. `degraded` keeps pressure on the review path, while `recovery` shows the model when capacity and weight are strong enough to clear the threshold.
-
-## Local Workflow
+## Example Run
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify.ps1
 ```
 
-This runs the language-level build or test path against the compact fixture set.
+## Tests
 
-## Quality Gate
+The verifier is intentionally local. It should fail if the fixture score math, lane assignment, or language-specific test drifts.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/audit.ps1
-```
+## Known Limits
 
-The audit command checks repository structure and README constraints before it delegates to the verifier.
-
-## Expansion Ideas
-
-- Add a loader for `examples/extended_cases.csv` and promote selected cases into the language test suite.
-- Add a short report command that prints the score breakdown for a single scenario.
-- Add malformed input fixtures so the failure path is as visible as the happy path.
-- Add one more chess and game engines fixture that focuses on a malformed or borderline input.
-
-## Scope
-
-The repository favors determinism over breadth. It does not pull live data, keep secrets, or depend on network access for verification.
+This remains a local project with deterministic fixtures. It does not depend on credentials, hosted services, or live data. Future work should add richer malformed inputs before widening the public API.
